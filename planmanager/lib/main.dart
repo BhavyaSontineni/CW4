@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-
+//Bhavya Sri Sai-002893685
 void main() {
   runApp(MyApp());
 }
@@ -20,15 +20,15 @@ class Plan {
   String name;
   String description;
   DateTime date;
-  bool isCompleted;
   String priority;
+  bool isCompleted;
 
   Plan({
     required this.name,
     required this.description,
     required this.date,
+    required this.priority,
     this.isCompleted = false,
-    this.priority = 'Normal',
   });
 }
 
@@ -48,6 +48,7 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
       Plan newPlan = Plan(name: name, description: description, date: date, priority: priority);
       plans.add(newPlan);
       plansByDate.putIfAbsent(date, () => []).add(newPlan);
+      _sortPlans();
     });
   }
 
@@ -58,9 +59,10 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
         name: name,
         description: description,
         date: date,
-        isCompleted: oldPlan.isCompleted,
         priority: priority,
+        isCompleted: oldPlan.isCompleted,
       );
+      _sortPlans();
     });
   }
 
@@ -77,11 +79,18 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
     });
   }
 
+  void _sortPlans() {
+    plans.sort((a, b) {
+      Map<String, int> priorityMap = {'High': 3, 'Medium': 2, 'Low': 1};
+      return priorityMap[b.priority]!.compareTo(priorityMap[a.priority]!);
+    });
+  }
+
   void _showPlanDialog({int? index}) {
     String name = index != null ? plans[index].name : '';
     String description = index != null ? plans[index].description : '';
     DateTime date = index != null ? plans[index].date : _selectedDate;
-    String priority = index != null ? plans[index].priority : 'Normal';
+    String priority = index != null ? plans[index].priority : 'Medium';
 
     TextEditingController nameController = TextEditingController(text: name);
     TextEditingController descriptionController = TextEditingController(text: description);
@@ -121,19 +130,15 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
               ),
               DropdownButton<String>(
                 value: priority,
-                items: ['High', 'Normal', 'Low']
-                    .map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
+                items: ['High', 'Medium', 'Low'].map((priority) {
+                  return DropdownMenuItem(value: priority, child: Text(priority));
                 }).toList(),
-                onChanged: (String? newValue) {
+                onChanged: (value) {
                   setState(() {
-                    priority = newValue!;
+                    priority = value!;
                   });
                 },
-              ),
+              )
             ],
           ),
           actions: [
@@ -220,13 +225,7 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
                           color: plan.isCompleted ? Colors.green : Colors.black,
                         ),
                       ),
-                      subtitle: Text(plan.description),
-                      trailing: Text(
-                        plan.priority,
-                        style: TextStyle(
-                          color: plan.priority == 'High' ? Colors.red : plan.priority == 'Low' ? Colors.blue : Colors.black,
-                        ),
-                      ),
+                      subtitle: Text('Priority: ${plan.priority}\n${plan.description}'),
                       onLongPress: () => _showPlanDialog(index: index),
                       onTap: () => _toggleCompletion(index),
                     ),
